@@ -1,0 +1,240 @@
+# Name: Adil Khokhar
+# CLID: axk9375
+# 
+# System Architecture: Windows 7 - Operated on TKslide 0.35 
+#                      The Macro Implementation of SNOBOL4 in C (CSNOBOL4) Version 1.5 (by Philip L. Budne, October 1, 2013)
+#                      SNOBOL4 (Version 3.11, May 19, 1975)
+# Did not need to use -d, -P, or -S on test machine. If it is unable to allocate memory on another machine
+# use the following Snobol4 options: -b -d 60m -P 50m -S 20m
+# SNOBOL4 Keywords:
+# 	&DUMP = 1 Dumps all variables and things to output if program finishes executing
+# 	&TRIM = 1 Trims all leading whitespace before input, but not whitespace inside of input.
+# 	&FULLSCAN = 1 Turns on fullscan mode. Generally does not cause a performance hit either for recognizing patterns in the program.
+               &TRIM = 1
+               &FULLSCAN = 1				
+#    - Helper patterns - 
+#  		To match a predefined set of symbols.
+				letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+				digit = '0123456789'
+				log_val = 'true' | 'false'
+				blank = " "
+				period = '.'
+				sign = '+' | '-'
+				log_op2 = 'and' | 'or' | '->' | '=='  
+                add_op = '+' | '-'
+                mult_op = '*' | '/'								
+# 2.3 - Delimiters - 
+#       This section of delimiters is not used when recognizing an ALGOL60 program, but was included regardless.
+#       The delimiters are generally split up for their respective 
+                art_op = '+-*/^'
+                rel_op = '>=' | '<=' | '<' | '>' | '='
+                log_op = 'and' | 'or' | 'not' | "->" | "=="
+                seq_op = 'goto' | 'if' | 'then' | 'else' | 'for' | 'do'
+                seperator = ',' | '.' | ':' | ';' | ':=' | '#' | 'step' | 'until' | 'while' | 'comment'
+                bracket = '(' | ')' | '[' | ']' | "'" | 'begin' | 'end'
+                declarator = 'own' | 'Boolean' | 'integer' | 'real' | 'array' | 'switch' | 'procedure'
+                specificator = 'string' | 'label' | 'value'
+                operator = any(art_op) | rel_op | log_op | seq_op
+                delimiter = operator | separator | bracket | declarator | specificator          
+# 2.0 - Symbols - 
+#       Symbols aren't used when interpreting an ALGOL60 program. Clean this up.
+                symbol = letter | digit | log_val | delimiter
+# 2.4 - Identifiers - 
+#       Matches any single letter, followed by any arbitrary combination of letters or digits. 
+                id = any(letter) arbno(any(letter digit)) 
+# 2.5 - Numbers -
+# 	    The number pattern will represent a number with a sign that also may have a decimal portion. 
+#		A special note is that the ALGOL60 report productions make use of only the modified unsigned number production.	
+                uint = any(digit) arbno(any(digit))
+                dec = any(period) uint
+                unum = uint | dec | uint dec 
+                num = sign unum | unum 
+# 2.6 - Strings -
+#		The string pattern will match any arbitrary characters up until the next quote.
+                str_sym = letter digit art_op "<>=,.:;#()[]"                                
+                string = "'" arb "'"                      
+
+# 3.0 - Expressions -
+#		This pattern links the 3 different types of expressions together.
+                expr = *arith_expr | *bool_expr | *des_expr
+                
+# 3.1 - Variables -
+#		A variable is a designation given to a value, which may be then used in expressions for forming other values. This pattern matches those variables.
+                sub_expr = *arith_expr
+                
+                sub_list = sub_expr | sub_expr *sub_list2
+                sub_list2 = "," sub_expr *sub_list2 | null 
+                sub_var = id '[' sub_list ']'
+                var = id | sub_var        
+# 3.2 - Function Designators -
+#		Function designators define the values given by the procedure declaration. This pattern will match that portion of a procedure declaration.
+                act_arg = string | expr | id
+                letter_str = any(letter) arbno(any(letter))
+                arg_del = ',' | ')' letter_str ':('
+                
+
+                act_argl = act_arg | act_arg *act_argl2
+                act_argl2 = arg_del act_arg *act_argl2 | null 
+                act_argp = '(' act_argl ')' | null
+                func_des = id act_argp
+
+# 3.3 - Arithmetic Expression -
+#		This pattern will recognize any arithmetic expression, 
+#		that is any code that is used to obtain a numerical value. Arithmetic expressions may also have if clauses 
+#		that lead to a boolean expression. Arithmetic expressions may have arithmetic expressions in them surrounded with parenthesis.
+
+				primary = unum | var | *func_des | '(' *arith_expr ')'
+                factor = primary | primary ( '' | '^' *factor )
+                term = factor | factor ( '' | mult_op *term )
+
+                sa1 = add_op term ( null | *sa1 )
+				sart_exp = term | add_op term | term sa1 | sa1
+
+
+                
+                if_clause = 'if' *bool_expr 'then'
+                 
+                arith_expr = sart_exp | if_clause sart_exp 'else' *arith_expr
+
+# 3.4 - Boolean Expression -
+#		This pattern will match any boolean expression, any code that is for computing a logical value using logical operators or relational 
+#		operators between arithmetic expressions. Boolean expressions can have if clauses that lead into other boolean expressions.
+                relation = *arith_expr rel_op *arith_expr
+
+                bool_pri = log_val | relation | var | func_des | '(' *bool_expr ')'
+                bool_sec = bool_pri | "not" bool_pri 
+                bool_fac = bool_sec | bool_sec bf1
+				bf1 = "and" bool_sec *bf1 | null
+                bool_ter = bool_fac | bool_fac *bt1
+				bt1 = 'or' bool_fac *bt1 | null
+                bool_impl = bool_ter | bool_ter *bi1
+				bi1 = '->' bool_ter *bi1 | null  
+                simp_bool = bool_impl | bool_impl *sb1
+                sb1 = '==' bool_impl *sb1 | null
+                bool_expr = simp_bool | if_clause simp_bool 'else' *bool_expr
+# 3.5 - Designational Expressions - 
+#		This pattern matches designational expressions, which are expressions in code that may compute a specified label within the same program. 
+#		Essentially, they're labels that also act like switch statements.
+                label = id | uint
+                sw_des = id '[' sub_expr ']'
+
+                sw_des_expr = label | sw_des | '(' *des_expr ')'
+                des_expr = sw_des_expr | if_clause sw_des_expr 'else' *des_expr
+# 4.3 - Go to Statements -
+#		This pattern will match any code that will assign a value of an expression to variables.
+                go_st = "goto" des_expr
+# 4.2 - Assignment Statements -
+#		Matches a block of code. This code may denote arbitrary statements, declarations, and labels, and use begin and end within statement clauses. 
+#		Each statement can also be a complete block of code.
+                left_part = var ":="
+
+                left_part_list = left_part ( '' | *left_part_list )
+
+                assign_st = left_part_list ( *arith_expr | *bool_expr )
+  
+# 5.1 - Declarations -
+#		This pattern links the different types of declarations together.
+                decl = *type_decl | *array_decl | *switch_decl | *proc_decl
+  
+# 4.1 - Compound Statements and Blocks -
+                unlabeled_basic_st = assign_st | go_st | func_des | null              
+                basic_st = unlabeled_basic_st | label ':' *basic_st 
+                uncond_st = basic_st | *for_st | *com_st | *block 
+                statement = uncond_st | *cond_st
+				com_tail = statement ( 'end' | ';' *com_tail )
+                block_head = 'begin' decl ( '' | ';' *block_head )
+                unlabeled_com = 'begin' com_tail
+                unlabeled_block = block_head ';' com_tail
+                com_st = unlabeled_com | label ':' *com_st
+                                
+                block = unlabeled_block | label ':' *block
+                                
+
+                                              
+# 4.5 - Conditional Statements -
+#		This pattern will match conditional statements that are in if clauses and have an optional else clause and a statement.
+
+                if_st = if_clause uncond_st | label ':' *if_st
+
+                cond_st = if_st ( '' | 'else' statement)
+# 4.6 - For statements -
+#		This pattern will match arithmetic expressions as elements in a for statement, that may also be followed by other for 
+#		statements within the 'for' 'do' portions of a for statement. A for statement can be followed up by another for statement.
+                for_list_ele = *arith_expr ( ''
++                            | "step" *arith_expr "until" *arith_expr
++                            | "while" *bool_expr )
+                
+                for_list = for_list_ele ( '' | ',' *for_list )
+
+
+                for_clause = 'for' var ':=' for_list 'do'
+                for_st = for_clause statement | label ':' *for_st 
+
+# 5.1 - Type Declarations -
+#		This pattern will match any of the defined types with an optional own statement before the type. I.E own real 
+				type_list = id | id ',' *type_list
+				type = 'real' | 'integer' | 'Boolean'
+				own_type = type | 'own' type
+				type_decl = own_type type_list
+
+# 5.2 - Array Declarations -
+#		This pattern will match any arithmetic expressions with a colon between them, as well as a list of pairs enclosed within brackets.		
+                bound_pair = *arith_expr ':' *arith_expr		
+                bound_pair_list = bound_pair |  bound_pair *bound_pair_list2
+				bound_pair_list2 = 	',' bound_pair *bound_pair_list2 | null
+                array_seg = id '[' bound_pair_list ']' | id ',' *array_seg
+                array_list = array_seg | array_seg *array_list1
+				array_list1 = ',' array_seg *array_list1 | null
+                array_decl = 'array' array_list | own_type 'array' array_list   
+
+		
+# 5.3 - Switch Declarations -
+#		This pattern will match any designational expression that leads to a series of switch declarations.
+                
+                switch_list = des_expr *switch_list1
+				switch_list1 = ',' des_expr *switch_list1 | null
+                switch_decl = 'switch' id ':=' switch_list
+                
+# 5.4 - Procedure Declarations -
+#		This pattern recognizes the procedure and procedure body of an ALGOL60 program.
+
+                frm_argl = id | id *frm_argl2
+				frm_argl2 = arg_del id *act_argl2 | null
+
+                frm_argp = '(' frm_argl ')' | ''
+                
+                
+                idls = id | id *idl1
+				idl1 = ',' id *idl1 | null
+
+                                
+                val_part = "value" idls ";" | ''
+                spec = "string" | type | "array" | type "array" | "label"
+.                               | "switch" | "procedure" | type "procedure"
+                sp_prt = spec idls ';' *sp_prt | spec idls ';' | null
+                proc_head = id frm_argp ";" val_part sp_prt
+                proc_decl = "procedure" proc_head *statement | type 'procedure' proc_head *statement
+				
+# Main ALGOL-60 Recognizer Pattern
+                algol = proc_decl ( null | *algol )				
+#--------------------------------------------------------------------#
+#                         Main Program                               #
+#--------------------------------------------------------------------#
+                                                                                                  :(begin_body)                                     
+test            test1 = str
+# Strip all ALGOL-60 style comments from the input.
+comment_strip   str 'comment' break(';') ';' = ''                                                 :s(comment_strip)
+# CHAR(9) = TAB, CHAR(10) = newline. Strip all spaces and newlines from the input.
+space_strip		str " " | CHAR(9) | CHAR(10) = ''                                                 :s(space_strip)
+# Create an anchored pattern that will match the main algol recognizer pattern and do pattern match.
+                pattern = POS(0) algol RPOS(0)
+                str pattern $ test2                                                               :s(success_test)f(fail_test)
+# 2. Consumes all input provided, concatenating it into str, then jumps to test. 
+begin_body      str = str input                                                                   :s(begin_body)f(test)
+
+success_test    output = "YES"                                                                    :(end_body) 
+fail_test       output = "NO"                                                                     :(end_body)        
+
+end_body
+                output = ''
+end

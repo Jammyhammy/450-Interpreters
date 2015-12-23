@@ -1,0 +1,47 @@
+# 
+# Tkslide preferences: Consolas 10
+# Snobol4 options: -b -d 128m -P 40m -S 20m (In class was only -d 128m -P 40m so try avoiding -S)
+
+# Literals
+                letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+                digit = '0123456789'
+                log_val = 'true' | 'false'
+                blank = " "
+				empty = ""
+                period = '.'
+
+# Delimiters
+                art_op = '+-*/^' 
+                rcl_op = '>=' | '<=' | '<' | '>' | '='
+                log_op = 'and' | 'or' | 'not' | "->" | "=="
+                seq_op = 'go to' | 'if' | 'then' | 'else' | 'for' | 'do'
+                seperator = ',' | '.' | ':' | ';' | ':=' | '#' | 'step' | 'until' | 'while' | 'comment'
+                bracket = '(' | ')' | '[' | ']' | "'" | 'begin' | 'end'
+                declarator = 'own' | 'Boolean' | 'integer' | 'real' | 'array' | 'switch' | 'procedure'
+                specificator = 'string' | 'label' | 'value'
+                operator = any(art_op) | rcl_op | log_op | seq_op
+                delimiter = operator | separator | bracket | declarator | specificator
+# Symbols
+                symbol = letter | digit | log_val | delimiter
+# Identifiers				
+                id = arbno(any(letter) span(letter digit))
+# Numbers			
+                uint = span(digit)
+                dec = any(period) uint
+                num =  uint | dec | uint any(period) uint
+# Strings
+                str_sym = letter digit art_op "<>=,.:;#()[]"				
+                string = "'" span(str_sym) "'"                                                    :(begin_body)
+                
+test            test1 = str
+                pattern = POS(0) id RPOS(0)
+                id pattern $ test2                                                                :s(success_test)f(fail_test)
+
+begin_body      str = input                                                                       :(test)
+
+success_test    output = "Pattern " test2 " matched in " test1                                    :(end_body)                         
+fail_test       output = "Pattern match failed for " test1 " in " test2                           :(end_body)         
+
+end_body
+                output = "END"
+end

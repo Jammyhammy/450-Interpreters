@@ -1,0 +1,184 @@
+-----------------------------------------------------------
+----------------------Valid ALGOL60------------------------
+-----------------------------------------------------------
+
+procedure Spur(a)Order:(n)Result:(s);value n ;array a ; integer n ; real s; begin integer k; s:= 0 ; for k : = 1 step 1 until n do s : = s + a[k,k] end
+
+------------------------------------------------------------
+   
+procedure Absmax(a)size :(n,m)Result:(y)Subscripts:
+	(i,k) ;
+	comment The absolute greatest element of the matrix a,
+	of size n by m   is transferred to y, and the subscripts
+	of this element to i and k;
+	array a ; integer n, m, i, k ; real y;
+	begin integer p, q;
+		y:= 0 ;
+		for p : = 1 step 1 until n do for q : = 1 step 1 until mdo
+			ifabs(a[p,q])>ythenbeginy:=abs(a[p,q]) ; i:=p ;
+			k:=q
+		end
+		procedure Absmax(a)size :(n,m)Result:(y)Subscripts:
+		(i,k) ;
+		comment The absolute greatest element of the matrix a,
+		of size n by m   is transferred to y, and the subscripts
+		of this element to i and k;
+		array a ; integer n, m, i, k ; real y;
+		begin integer p, q;
+		y:= 0 ;
+		for p : = 1 step 1 until n do for q : = 1 step 1 until mdo
+			ifabs(a[p,q])>ythenbeginy:=abs(a[p,q]) ; i:=p ;
+			k:=q
+		end
+	end
+end  
+
+------------------------------------------------------------
+
+procedure Absmax(a)size :(n,m)Result:(y)Subscripts:
+(i,k) ;
+comment The absolute greatest element of the matrix a,
+of size n by m   is transferred to y, and the subscripts
+of this element to i and k;
+array a ; integer n, m, i, k ; real y;
+begin integer p, q;
+y:= 0 ;
+for p : = 1 step 1 until n do for q : = 1 step 1 until
+mdo
+ifabs(a[p,q])>ythenbeginy:=abs(a[p,q]) ; i:=p ;
+k:=q
+end
+end 
+
+------------------------------------------------------------
+
+begin ds := mn/2 ; n := n+1 ; m[n] := mn end
+mn end
+else := + ds ;
+sum := sum + ds;
+if abs(ds)<eps then t : = t+l else t : = 0 ;
+if t<tim then go to nextterm
+end
+
+------------------------------------------------------------
+----------------Possibly Invalid ALGOL60-------------------
+-----------------------------------------------------------
+
+procedure euler (fct, sum, eps, tim); value eps, tim; integer tim; real
+procedure fct ; real sum, eps; begin integer i, k, n, t; array m[0:15];
+real mn, mp, ds; i := n := t := 0; m[0] := fct(0); sum := m[0]/2;
+nextterm : i := i+1; mn:=fct(i); for k:=0 step 1 until n do begin mp := (mn+m[k])/2; m[k] := mn; mn :=mp end ;
+if (abs(mn)<abs(m[n]))and(n<15)then begin ds := mn/2; n:= n+1; m[n]:=mn end
+else ds := mn; sum := sum+ds; if abs(ds)<eps then t := t+1 else t:=0;
+if t<tim then go to nextterm end
+
+------------------------------------------------------------
+
+procedure fct ; real sum, eps; begin integer i, k, n, t; array m[0:15];
+real mn, mp, ds; i := n := t := 0; m[0] := fct(0); sum := m[0]/2;
+nextterm : i := i+1; mn:=fct(i); for k:=0 step 1 until n do begin mp := (mn+m[k])/2; m[k] := mn; mn :=mp end
+
+-----------------------------------------------------------
+procedure RK(x,y,n,FKT,eps,eta,xE,yE,fi) ; value x,y ;
+integer n ; Boolean fi, real x,eps,eta,xE ; array
+y,yE ; procedure FKT ;
+begin
+        array z,y1,y2,y3[1:n] ; real x1,x2,x3,H ; Boolean out ;
+        integer k,j ; own real s,Hs ;
+        procedure RKlST(x,y,h,xe,ye) ; real x,h,xe ; array
+                y,ye ;
+        begin
+                array w[1:n], a[1:5] ; integer k,j ;
+                a[1] := a[2] := a[5] := h/2 ; a[3] := a[4] := h ;
+                xe := x ;
+                for k := 1 step 1 until n do ye[k] := w[k] := y[k] ;
+                for j := 1 step 1 until 4 do
+                begin
+                        FKT(xe,w,n,z) ;
+                        xe := x+a[j] ;
+                        for k := 1 step 1 until n do
+                        begin
+                                w[k] := y[k]+a[j]*z[k] ;
+                                ye[k] := ye[k] + a[j+1]*z[k]/3
+                        end
+                end
+        end ;
+Begin of program:
+        if fi then begin H := xE-x ; s:= 0 end else H := Hs ;
+        out := false ;
+AA: if (x+2.01*H-xE>0) == (H>0) then
+        begin Hs := H ; out := true ; H := (xE-x)/2
+                end ;
+        RKlST(x,y,2*H,x1,y1) ;
+BB: RKlST(x,y,H,x2,y2) ; RKlST(x2,y2,H,x3,y3) ;
+        for k := 1 step 1 until n do
+                if comp(y1[k],y3[k],eta)>eps then go to CC ;
+        x := x3 ; if out then go to DD ;
+        for k := 1 step 1 until n do y[k] := y3[k] ;
+        if s==5 then begin s := 0 ; H := 2*H end ;
+        s := s+1 ; go to AA ;
+CC: H := 0.5*H ; out := false ; x1 := x2 ;
+        for k := 1 step 1 until n do y1[k] := y2[k] ;
+        go to BB ;
+DD: for k := 1 step 1 until n do yE[k] := y3[k]
+end
+-----------------------------------------------------------
+--------------------Invalid ALGOL60------------------------
+-----------------------------------------------------------
+
+procedure swap(a, b)
+  integer a, b;
+  begin
+    integer temp;
+    temp := a;
+    a := b;
+    b := temp;
+  end;
+  
+   real procedure GPS(I, N, Z, V);
+   real I, N, Z, V;
+   begin for I := 1 step 1 until N do Z := V;
+         GPS := 1
+   end
+   
+    real procedure Sum(k, l, u, ak)
+      value l, u;
+      integer k, l, u;
+      real ak;
+      comment k and ak are passed by name;
+   begin
+      real s;
+      s := 0;
+      for k := l step 1 until u do
+         s := s + ak;
+      Sum := s
+   end;
+   
+------------------------------------------------------------   
+
+  real procedure A(k, x1, x2, x3, x4, x5);
+  value k; integer k;
+  begin
+    real procedure B;
+    begin k := k - 1;
+          B := A := A(k, B, x1, x2, x3, x4);
+    end;
+    if k <= 0 then A := x4 + x5 else B;
+  end;
+  outreal(A(10, 1, -1, -1, 1, 0));
+end;
+
+------------------------------------------------------------ 
+
+   begin integer i; real y; real array a[0:10];
+   real procedure f(t); real t; value t;
+     f := sqrt(abs(t)) + 5*t^3;
+   for i := 0 step 1 until 10 do read(a[i]);
+   for i := 10 step -1 until 0 do
+     begin y := f(a[i]);
+           if y > 400 then write(i, "TOO LARGE")
+           else write(i,y);
+     end
+   end
+
+
